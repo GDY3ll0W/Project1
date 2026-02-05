@@ -26,7 +26,7 @@ void BooksCollection::AddBook() {
     std::cin >> cost;
     std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); // Clear the newline character from the buffer
 
-    Books* newBook = new Books(author, title, isbn, id, cost);
+	Books* newBook = new Books(author, title, isbn, id, cost);// Both title and author needs string not int
     booksList.push_back(newBook);
     
     std::cout << "Book added successfully.\n";
