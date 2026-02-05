@@ -2,6 +2,7 @@
 #include <iostream>
 #include <limits> 
 #include <algorithm> 
+#include <string> // Include the string header for std::string
 BooksCollection::BooksCollection() {
 }
 
