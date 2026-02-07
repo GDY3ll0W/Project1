@@ -5,7 +5,12 @@
 
 std::tm getCurrentDate() {
     std::time_t t = std::time(nullptr);
-    std::tm tm = *std::localtime(&t);
+    std::tm tm;
+#if defined(_MSC_VER)
+    localtime_s(&tm, &t);
+#else
+    localtime_r(&t, &tm);
+#endif
     return tm;
 }
 
