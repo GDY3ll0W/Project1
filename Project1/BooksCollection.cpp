@@ -14,7 +14,8 @@ BooksCollection::~BooksCollection() {
 
 void BooksCollection::AddBook() {
     std::string title, author;
-    int isbn, id = booksList.size();
+    int isbn;
+    int id = static_cast <int> (booksList.size());
     float cost;
     
     std::cout << "Enter book title: ";
