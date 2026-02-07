@@ -6,7 +6,7 @@
 
 class Loans {
 public:
-    enum LoanStatus { NORMAL, OVERDUE };
+    enum LoanStatus { NORMAL, OVERDUE, RETURNED};
     
     Loans(int bookID, int patronID, std::tm dueDate);
 
