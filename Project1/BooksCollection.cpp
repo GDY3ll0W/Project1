@@ -1,37 +1,105 @@
 #include "BooksCollection.h"
 #include <iostream>
-#include <limits> 
-#include <algorithm> 
-#include <string> // Include the string header for std::string
-BooksCollection::BooksCollection() {
+#include <string>
+#include <limits>
+#include <algorithm>
+#include <cctype>
+#include <sstream>
+
+// helpers (file-local)
+static std::string trim(const std::string& s) {
+    size_t start = 0;
+    while (start < s.size() && std::isspace(static_cast<unsigned char>(s[start]))) ++start;
+    size_t end = s.size();
+    while (end > start && std::isspace(static_cast<unsigned char>(s[end - 1]))) --end;
+    return s.substr(start, end - start);
 }
 
+static std::string toLower(const std::string& s) {
+    std::string out;
+    out.reserve(s.size());
+    for (unsigned char c : s) out.push_back(static_cast<char>(std::tolower(c)));
+    return out;
+}
+
+BooksCollection::BooksCollection() {}
 BooksCollection::~BooksCollection() {
-    for (auto* book : booksList) {
-        delete book;
-    }
+    for (Books* b : booksList) delete b;
+    booksList.clear();
 }
 
 void BooksCollection::AddBook() {
-    std::string title, author;
-    int isbn;
-    int id = static_cast <int> (booksList.size());
-    float cost;
-    
-    std::cout << "Enter book title: ";
-    std::getline(std::cin, title);
-    std::cout << "Enter author: ";
-    std::getline(std::cin, author);
-    std::cout << "Enter ISBN: ";
-    std::cin >> isbn;
-    std::cout << "Enter cost: ";
-    std::cin >> cost;
-    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); // Clear the newline character from the buffer
+    // Use getline with std::ws to skip any leftover whitespace/newline so the user
+    // doesn't have to press Enter twice.
+    std::string author, title, line;
+    int isbn = 0, libraryID = 0;
+    float cost = 0.0f;
+    int statusChoice = 0;
 
-	Books* newBook = new Books(author, title, isbn, id, cost);// Both title and author needs string not int
+    std::cout << "Enter author: ";
+    if (!std::getline(std::cin >> std::ws, author)) return;
+
+    std::cout << "Enter title: ";
+    if (!std::getline(std::cin >> std::ws, title)) return;
+
+    // Read integers/floats from full lines to avoid mixing operator>> and getline.
+    while (true) {
+        std::cout << "Enter ISBN (integer): ";
+        if (!std::getline(std::cin, line)) return;
+        line = trim(line);
+        if (line.empty()) continue;
+        try {
+            isbn = std::stoi(line);
+            break;
+        } catch (...) {
+            std::cout << "Invalid ISBN. Enter an integer.\n";
+        }
+    }
+
+    while (true) {
+        std::cout << "Enter Library ID (integer): ";
+        if (!std::getline(std::cin, line)) return;
+        line = trim(line);
+        if (line.empty()) continue;
+        try {
+            libraryID = std::stoi(line);
+            break;
+        } catch (...) {
+            std::cout << "Invalid Library ID. Enter an integer.\n";
+        }
+    }
+
+    while (true) {
+        std::cout << "Enter cost (decimal): ";
+        if (!std::getline(std::cin, line)) return;
+        line = trim(line);
+        if (line.empty()) continue;
+        try {
+            cost = std::stof(line);
+            break;
+        } catch (...) {
+            std::cout << "Invalid cost. Enter a number.\n";
+        }
+    }
+
+    while (true) {
+        std::cout << "Select status (0 = IN, 1 = OUT, 2 = LOST): ";
+        if (!std::getline(std::cin, line)) return;
+        line = trim(line);
+        if (line.empty()) continue;
+        try {
+            statusChoice = std::stoi(line);
+            if (statusChoice >= 0 && statusChoice <= 2) break;
+        } catch (...) {}
+        std::cout << "Invalid choice. Enter 0, 1, or 2.\n";
+    }
+
+    Books::BookStatus status = static_cast<Books::BookStatus>(statusChoice);
+
+    Books* newBook = new Books(author, title, isbn, libraryID, cost, status);
     booksList.push_back(newBook);
-    
-    std::cout << "Book added successfully.\n";
+
+    std::cout << "Book added: \"" << title << "\" by " << author << '\n';
 }
 
 void BooksCollection::EditBook() {
@@ -49,7 +117,12 @@ void BooksCollection::EditBook() {
     std::cout << "4. Cost\n";
     std::cout << "Enter choice: ";
     int choice;
-    std::cin >> choice;
+    if (!(std::cin >> choice)) {
+        std::cin.clear();
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+        std::cout << "Invalid input.\n";
+        return;
+    }
     std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); // Clear the newline character from the buffer
 
     switch (choice) {
@@ -70,16 +143,26 @@ void BooksCollection::EditBook() {
         case 3: {
             int newISBN;
             std::cout << "Enter new ISBN: ";
-            std::cin >> newISBN;
-            book->setISBN(newISBN);
+            if (std::cin >> newISBN) {
+                book->setISBN(newISBN);
+            } else {
+                std::cin.clear();
+                std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+                std::cout << "Invalid ISBN. No change made.\n";
+            }
             std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); // Clear the buffer
             break;
         }
         case 4: {
             float newCost;
             std::cout << "Enter new cost: ";
-            std::cin >> newCost;
-            book->setCost(newCost);
+            if (std::cin >> newCost) {
+                book->setCost(newCost);
+            } else {
+                std::cin.clear();
+                std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+                std::cout << "Invalid cost. No change made.\n";
+            }
             std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); // Clear the buffer
             break;
         }
@@ -109,35 +192,68 @@ void BooksCollection::DeleteBook() {
 }
 
 Books* BooksCollection::PromptForSearchMechanism() {
-    std::cout << "Search by (1) Title, (2) ISBN, or (3) ID? ";
-    int choice;
-    std::cin >> choice;
-    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); // Clear buffer
+    std::string line;
+    int choice = 0;
+
+    // Read choice as a full line and parse it
+    while (true) {
+        std::cout << "Search by (1) Title, (2) ISBN, or (3) ID? ";
+        if (!std::getline(std::cin, line)) return nullptr;
+        line = trim(line);
+        if (line.empty()) continue;
+        try {
+            choice = std::stoi(line);
+        } catch (...) {
+            std::cout << "Invalid input. Please enter 1, 2 or 3.\n";
+            continue;
+        }
+        if (choice >= 1 && choice <= 3) break;
+        std::cout << "Please enter 1, 2 or 3.\n";
+    }
 
     if (choice == 1) {
         std::string title;
         std::cout << "Enter title: ";
-        std::getline(std::cin, title);
+        if (!std::getline(std::cin, title)) return nullptr;
+        title = trim(title);
         return FindBookByTitle(title);
     } else if (choice == 2) {
-        int isbn;
-        std::cout << "Enter ISBN: ";
-        std::cin >> isbn;
+        int isbn = 0;
+        while (true) {
+            std::cout << "Enter ISBN: ";
+            if (!std::getline(std::cin, line)) return nullptr;
+            line = trim(line);
+            if (line.empty()) continue;
+            try {
+                isbn = std::stoi(line);
+                break;
+            } catch (...) {
+                std::cout << "Invalid ISBN. Enter an integer.\n";
+            }
+        }
         return FindBookByISBN(isbn);
-    } else if (choice == 3) {
-        int id;
-        std::cout << "Enter ID: ";
-        std::cin >> id;
+    } else { // choice == 3
+        int id = 0;
+        while (true) {
+            std::cout << "Enter ID: ";
+            if (!std::getline(std::cin, line)) return nullptr;
+            line = trim(line);
+            if (line.empty()) continue;
+            try {
+                id = std::stoi(line);
+                break;
+            } catch (...) {
+                std::cout << "Invalid ID. Enter an integer.\n";
+            }
+        }
         return FindBookByID(id);
-    } else {
-        std::cout << "Invalid choice.\n";
-        return nullptr;
     }
 }
 
 Books* BooksCollection::FindBookByTitle(const std::string& title) {
+    const std::string key = toLower(trim(title));
     for (auto* book : booksList) {
-        if (book->getTitle() == title) return book;
+        if (toLower(trim(book->getTitle())) == key) return book;
     }
     return nullptr;
 }
