@@ -5,7 +5,7 @@
 Patron::Patron(std::string nm, int ID) : name(nm), patronID(ID), fineBalance(0.0), numBooks(0) {}
 
 // Default constructor definition for creating a blank Patron.
-Patron::Patron() : patronID(0), fineBalance(0.0), numBooks(0) {}
+Patron::Patron() : name(""), patronID(0), fineBalance(0.0), numBooks(0) {}
 
 // Get the Patron's name
 std::string Patron::getName() const {
