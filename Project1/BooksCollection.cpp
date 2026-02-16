@@ -273,6 +273,11 @@ Books* BooksCollection::FindBookByID(int id) {
 }
 
 void BooksCollection::PrintAllBooks() const {
+    if (booksList.empty()) {
+        std::cout << "There are no books to print" << std::endl;
+        return;
+    }
+
     for (const auto* book : booksList) {
         std::cout << "ID: " << book->getLibraryID() << ", Title: " << book->getTitle() 
                   << ", Author: " << book->getAuthor() << ", ISBN: " << book->getISBN() 
