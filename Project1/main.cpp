@@ -51,7 +51,7 @@ void bookOptions(BooksCollection& books) {
         std::cout << "Enter choice: ";
         std::cin >> choice;
         std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); // Clear the buffer
-
+        //error occurs around this line?
         switch (choice) {
             case 1:
                 books.AddBook();
