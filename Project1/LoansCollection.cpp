@@ -20,6 +20,7 @@
 static std::tm getCurrentDate() {
     std::time_t t = std::time(nullptr);
     return *std::localtime(&t);
+}
 //---------------------------------
 
 std::string tmToString(const std::tm& date) {
