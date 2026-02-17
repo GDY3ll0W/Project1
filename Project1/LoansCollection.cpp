@@ -85,12 +85,18 @@ void LoansCollection::CheckInBook(PatronsCollection &allPatrons, BooksCollection
 
 void LoansCollection::ListAllOverdueBooks() {
     std::cout << "Overdue Books:\n";
+    bool found = false;
     for (auto* loan : loansList) {
         std::tm dueDate = loan->getDueDate();
         std::tm today = getCurrentDate();
         if (calculateDaysDifference(dueDate, today) > 0) {
             std::cout << "Loan ID " << loan->getLoanID() << " is overdue.\n";
+            found = true;
         }
+    }
+
+    if (!found) {
+        std::cout << "There are no overdue books" << std::endl;
     }
 }
 
