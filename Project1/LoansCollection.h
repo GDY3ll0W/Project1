@@ -2,6 +2,7 @@
 #define LOANSCOLLECTION_H
 
 #include <vector>
+#include <ctime>
 #include "Loans.h"
 #include "PatronsCollection.h"
 #include "BooksCollection.h"
