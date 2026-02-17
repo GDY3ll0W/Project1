@@ -2,8 +2,10 @@
 #include <iostream>
 #include <ctime>
 #include <algorithm>
+#include <iomanip>
 
-std::tm getCurrentDate() {
+//This is the original work; delete the comment section if the new ones don't work.
+/*std::tm getCurrentDate() {
     std::time_t t = std::time(nullptr);
     std::tm tm;
 #if defined(_MSC_VER)
@@ -12,10 +14,16 @@ std::tm getCurrentDate() {
     localtime_r(&t, &tm);
 #endif
     return tm;
-}
+}*/
+
+//NEW Section: -------------------- This uses helper functions to prevent linker errors.
+static std::tm getCurrentDate() {
+    std::time_t t = std::time(nullptr);
+    return *std::localtime(&t);
+//---------------------------------
 
 std::string tmToString(const std::tm& date) {
-    char buffer[11];
+    char buffer[20]; //I put 20 instead of 11.
     strftime(buffer, sizeof(buffer), "%d-%m-%Y", &date);
     return std::string(buffer);
 }
