@@ -54,7 +54,7 @@ void BooksCollection::AddBook() {
         } catch (...) {
             std::cout << "Invalid ISBN. Enter an integer.\n";
         }
-    }
+    } //Still allows decimals and negative numbers for some reason?
 
     while (true) {
         std::cout << "Enter Library ID (integer): ";
