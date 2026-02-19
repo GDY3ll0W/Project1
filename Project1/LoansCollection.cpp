@@ -33,7 +33,8 @@ static std::tm getCurrentDate() {
 
 std::string tmToString(const std::tm& date) {
     char buffer[20]; //I put 20 instead of 11.
-    strftime(buffer, sizeof(buffer), "%d-%m-%Y", &date);
+    // Western order: month-day-year
+    strftime(buffer, sizeof(buffer), "%m-%d-%Y", &date);
     return std::string(buffer);
 }
 
