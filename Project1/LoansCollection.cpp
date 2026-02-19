@@ -2,16 +2,39 @@
 #include <iostream>
 #include <ctime>
 #include <algorithm>
+#include <iomanip>
 
-std::tm getCurrentDate() {
+//This is the original work; delete the comment section if the new ones don't work.
+/*std::tm getCurrentDate() {
     std::time_t t = std::time(nullptr);
-    std::tm tm = *std::localtime(&t);
+    std::tm tm;
+#if defined(_MSC_VER)
+    localtime_s(&tm, &t);
+#else
+    localtime_r(&t, &tm);
+#endif
+    return tm;
+}*/
+
+//NEW Section: -------------------- This uses helper functions to prevent linker errors.
+static std::tm getCurrentDate() {
+    std::time_t t = std::time(nullptr);
+    std::tm tm;
+#if defined(_MSC_VER)
+    // Microsoft secure version
+    localtime_s(&tm, &t);
+#else
+    // POSIX version
+    localtime_r(&t, &tm);
+#endif
     return tm;
 }
+//---------------------------------
 
 std::string tmToString(const std::tm& date) {
-    char buffer[11];
-    strftime(buffer, sizeof(buffer), "%d-%m-%Y", &date);
+    char buffer[20]; //I put 20 instead of 11.
+    // Western order: month-day-year
+    strftime(buffer, sizeof(buffer), "%m-%d-%Y", &date);
     return std::string(buffer);
 }
 
@@ -68,8 +91,10 @@ void LoansCollection::CheckInBook(PatronsCollection &allPatrons, BooksCollection
     });
 
     if (it != loansList.end()) {
+        // Save pointer before erasing the iterator (erase invalidates the iterator)
+        Loans* loanPtr = *it;
         loansList.erase(it);
-        delete *it; // Assuming dynamic allocation of loans
+        delete loanPtr; // free the dynamically allocated loan
         book->setCurrentBookStatus(Books::IN);
         patron->setNumBooks(patron->getNumBooks() - 1);
         std::cout << "Book checked in successfully.\n";
@@ -80,12 +105,39 @@ void LoansCollection::CheckInBook(PatronsCollection &allPatrons, BooksCollection
 
 void LoansCollection::ListAllOverdueBooks() {
     std::cout << "Overdue Books:\n";
+    bool found = false;
     for (auto* loan : loansList) {
         std::tm dueDate = loan->getDueDate();
         std::tm today = getCurrentDate();
-        if (calculateDaysDifference(dueDate, today) > 0) {
+        // If dueDate is before today, the difference (due - today) will be negative.
+        // We consider a loan overdue when today is after the due date.
+        if (calculateDaysDifference(dueDate, today) < 0) {
             std::cout << "Loan ID " << loan->getLoanID() << " is overdue.\n";
+            found = true;
         }
+    }
+
+    if (!found) {
+        std::cout << "There are no overdue books" << std::endl;
+    }
+
+}
+
+void LoansCollection::ListAllCheckedOutBooks(BooksCollection &allBooks) {
+    std::cout << "Checked Out Books:\n";
+    bool found = false;
+    for (auto* loan : loansList) {
+        if (loan->getStatus() != Loans::RETURNED) {
+            Books* book = allBooks.FindBookByID(loan->getBookID());
+            std::string title = book ? book->getTitle() : std::string("<unknown>");
+            std::cout << "Loan ID " << loan->getLoanID() << ", Book ID " << loan->getBookID()
+                      << ", Title: " << title << ", Patron ID " << loan->getPatronID()
+                      << ", Due Date: " << tmToString(loan->getDueDate()) << "\n";
+            found = true;
+        }
+    }
+    if (!found) {
+        std::cout << "There are no checked out books" << std::endl;
     }
 }
 

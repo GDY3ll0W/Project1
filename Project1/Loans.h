@@ -1,12 +1,12 @@
 #ifndef LOANS_H
 #define LOANS_H
 
-#include <string>
+//#include <string>
 #include <ctime>
 
 class Loans {
 public:
-    enum LoanStatus { NORMAL, OVERDUE };
+    enum LoanStatus { NORMAL, OVERDUE, RETURNED};
     
     Loans(int bookID, int patronID, std::tm dueDate);
 

@@ -1,12 +1,16 @@
 #include<iostream>
 #include<string>
 #include<vector>
-#include <limits> 
-#include <algorithm> 
+#include <limits>
+#include <algorithm>
+#include <cctype>
 #include "PatronsCollection.h"
 #include "Patron.h"
 
 using namespace std;
+
+// Static unique ID initialization
+int PatronsCollection::nextPatronID = 1;
 
 // This is included as a reference if you wish to use this type of template style coding for hw4 or beyond.
 template<typename T>
@@ -43,27 +47,44 @@ int getIntInput(const string& prompt) {
     return input;
 }
 
+// helpers (file-local)
+static std::string trim(const std::string& s) {
+    size_t start = 0;
+    while (start < s.size() && std::isspace(static_cast<unsigned char>(s[start]))) ++start;
+    size_t end = s.size();
+    while (end > start && std::isspace(static_cast<unsigned char>(s[end - 1]))) --end;
+    return s.substr(start, end - start);
+}
+
+static std::string toLower(const std::string& s) {
+    std::string out;
+    out.reserve(s.size());
+    for (unsigned char c : s) out.push_back(static_cast<char>(std::tolower(c)));
+    return out;
+}
+
 // Adds a new patron to the collection
 void PatronsCollection::AddPatron() {
     cout << "\n--- Add a New Patron ---\n";
     string firstName = getStringInput("Enter patron's first name: ");
     string lastName = getStringInput("Enter patron's last name: ");
-    int ID = patronsList.size(); // ID is the next index in the vector
-    
+    int ID = nextPatronID++; // Use unique incremental ID
+
     string fullName = firstName + " " + lastName;
     auto* patron = new Patron(fullName, ID);
     patronsList.push_back(patron);
-    cout << "Patron added successfully.\n";
+    cout << "Patron added successfully. Assigned ID: " << ID << "\n";
 }
 
 // Prompts the user to choose a search mechanism and returns the corresponding Patron
 Patron* PatronsCollection::PromptForSearchMechanism() {
     while (true) {
         string method = getStringInput("Search by name or ID? (name/id): ");
-        if (method == "name") {
-            string name = getStringInput("Enter the patron's full name: ");
+        method = toLower(trim(method));
+        if (method == "name" || method == "n") {
+            string name = getStringInput("Enter the patron's full name (or partial name): ");
             return FindPatronByName(name);
-        } else if (method == "id") {
+        } else if (method == "id" || method == "i") {
             int id = getIntInput("Enter the patron's ID: ");
             return FindPatronByID(id);
         } else {
@@ -72,14 +93,53 @@ Patron* PatronsCollection::PromptForSearchMechanism() {
     }
 }
 
-// Finds a patron by name
+// Finds a patron by name (case-insensitive, allows partial match and resolves multiple matches)
 Patron* PatronsCollection::FindPatronByName(string name) {
+    string key = toLower(trim(name));
+    if (key.empty()) return nullptr;
+
+    vector<Patron*> exactMatches;
+    vector<Patron*> partialMatches;
+
     for (auto* patron : patronsList) {
-        if (patron->getName() == name) {
-            return patron;
+        string pname = toLower(trim(patron->getName()));
+        if (pname == key) {
+            exactMatches.push_back(patron);
+        } else if (pname.find(key) != string::npos) {
+            partialMatches.push_back(patron);
         }
     }
-    return nullptr; // Patron not found
+
+    // If exactly one exact match, return it
+    if (exactMatches.size() == 1) return exactMatches.front();
+
+    // If multiple exact matches, ask the user to disambiguate
+    if (exactMatches.size() > 1) {
+        cout << "Multiple exact matches found:\n";
+        for (auto* p : exactMatches) {
+            cout << "ID: " << p->getPatronID() << "  Name: " << p->getName() << "\n";
+        }
+        int chosen = getIntInput("Enter the ID of the correct patron: ");
+        return FindPatronByID(chosen);
+    }
+
+    // No exact matches -> handle partial matches
+    if (partialMatches.empty()) {
+        // nothing found
+        return nullptr;
+    }
+
+    if (partialMatches.size() == 1) {
+        return partialMatches.front();
+    }
+
+    // multiple partial matches -> disambiguate
+    cout << "Multiple partial matches found:\n";
+    for (auto* p : partialMatches) {
+        cout << "ID: " << p->getPatronID() << "  Name: " << p->getName() << "\n";
+    }
+    int chosen = getIntInput("Enter the ID of the correct patron: ");
+    return FindPatronByID(chosen);
 }
 
 // Finds a patron by ID
