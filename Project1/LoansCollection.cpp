@@ -19,7 +19,15 @@
 //NEW Section: -------------------- This uses helper functions to prevent linker errors.
 static std::tm getCurrentDate() {
     std::time_t t = std::time(nullptr);
-    return *std::localtime(&t);
+    std::tm tm;
+#if defined(_MSC_VER)
+    // Microsoft secure version
+    localtime_s(&tm, &t);
+#else
+    // POSIX version
+    localtime_r(&t, &tm);
+#endif
+    return tm;
 }
 //---------------------------------
 
@@ -106,7 +114,7 @@ void LoansCollection::ListAllOverdueBooks() {
 
     if (!found) {
         std::cout << "There are no overdue books" << std::endl;
-    }
+        }
 }
 
 void LoansCollection::ListBooksForPatron(PatronsCollection &allPatrons, BooksCollection &allBooks) {
