@@ -122,13 +122,16 @@ void LoansCollection::ListAllOverdueBooks() {
 
 }
 
-void LoansCollection::ListAllCheckedOutBooks() {
+void LoansCollection::ListAllCheckedOutBooks(BooksCollection &allBooks) {
     std::cout << "Checked Out Books:\n";
     bool found = false;
     for (auto* loan : loansList) {
-        if (loan->getStatus() != Loans::RETURNED && loan->getStatus() != Loans::LoanStatus::RETURNED) {
+        if (loan->getStatus() != Loans::RETURNED) {
+            Books* book = allBooks.FindBookByID(loan->getBookID());
+            std::string title = book ? book->getTitle() : std::string("<unknown>");
             std::cout << "Loan ID " << loan->getLoanID() << ", Book ID " << loan->getBookID()
-                      << ", Patron ID " << loan->getPatronID() << ", Due Date: " << tmToString(loan->getDueDate()) << "\n";
+                      << ", Title: " << title << ", Patron ID " << loan->getPatronID()
+                      << ", Due Date: " << tmToString(loan->getDueDate()) << "\n";
             found = true;
         }
     }
