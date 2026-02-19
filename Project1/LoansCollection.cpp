@@ -90,8 +90,10 @@ void LoansCollection::CheckInBook(PatronsCollection &allPatrons, BooksCollection
     });
 
     if (it != loansList.end()) {
+        // Save pointer before erasing the iterator (erase invalidates the iterator)
+        Loans* loanPtr = *it;
         loansList.erase(it);
-        delete *it; // Assuming dynamic allocation of loans
+        delete loanPtr; // free the dynamically allocated loan
         book->setCurrentBookStatus(Books::IN);
         patron->setNumBooks(patron->getNumBooks() - 1);
         std::cout << "Book checked in successfully.\n";
@@ -106,7 +108,9 @@ void LoansCollection::ListAllOverdueBooks() {
     for (auto* loan : loansList) {
         std::tm dueDate = loan->getDueDate();
         std::tm today = getCurrentDate();
-        if (calculateDaysDifference(dueDate, today) > 0) {
+        // If dueDate is before today, the difference (due - today) will be negative.
+        // We consider a loan overdue when today is after the due date.
+        if (calculateDaysDifference(dueDate, today) < 0) {
             std::cout << "Loan ID " << loan->getLoanID() << " is overdue.\n";
             found = true;
         }
@@ -114,7 +118,23 @@ void LoansCollection::ListAllOverdueBooks() {
 
     if (!found) {
         std::cout << "There are no overdue books" << std::endl;
+    }
+
+}
+
+void LoansCollection::ListAllCheckedOutBooks() {
+    std::cout << "Checked Out Books:\n";
+    bool found = false;
+    for (auto* loan : loansList) {
+        if (loan->getStatus() != Loans::RETURNED && loan->getStatus() != Loans::LoanStatus::RETURNED) {
+            std::cout << "Loan ID " << loan->getLoanID() << ", Book ID " << loan->getBookID()
+                      << ", Patron ID " << loan->getPatronID() << ", Due Date: " << tmToString(loan->getDueDate()) << "\n";
+            found = true;
         }
+    }
+    if (!found) {
+        std::cout << "There are no checked out books" << std::endl;
+    }
 }
 
 void LoansCollection::ListBooksForPatron(PatronsCollection &allPatrons, BooksCollection &allBooks) {

@@ -20,6 +20,9 @@ public:
     // Lists all overdue books
     void ListAllOverdueBooks();
 
+    // Lists all currently checked out loans (not returned)
+    void ListAllCheckedOutBooks();
+
     // Lists all books checked out to a specific patron
     void ListBooksForPatron(PatronsCollection &allPatrons, BooksCollection &allBooks);
 
