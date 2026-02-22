@@ -2,6 +2,7 @@
 #include <iostream>
 #include <ctime>
 #include <algorithm>
+#include <string>
 #include <iomanip>
 
 //This is the original work; delete the comment section if the new ones don't work.
@@ -32,9 +33,9 @@ static std::tm getCurrentDate() {
 //---------------------------------
 
 std::string tmToString(const std::tm& date) {
-    char buffer[20]; //I put 20 instead of 11.
-    // Western order: month-day-year
-    strftime(buffer, sizeof(buffer), "%m-%d-%Y %H %M %S", &date);
+    char buffer[40]; // room for date and time
+    // Western order: month-day-year and time HH:MM:SS
+    strftime(buffer, sizeof(buffer), "%m-%d-%Y %H:%M:%S", &date);
     return std::string(buffer);
 }
 
@@ -48,36 +49,36 @@ static bool isOverDue(const std::tm& dueDate) {
 //---------------------------------
 
 //New Section: -------------------- This Calculates the exact overdue time in weeks, days, hours, minutes, and seconds.
-static std::string getDetailedOverdueTime(Const std::tm& dueDate) {
-	std::time_t now = std::time(nullptr);
+static std::string getDetailedOverdueTime(const std::tm& dueDate) {
+    std::time_t now = std::time(nullptr);
     std::tm dueCopy = dueDate;
-	std::time_t due = std::mktime(&dueCopy);
+    std::time_t due = std::mktime(&dueCopy);
 
-	double diffSeconds = std::difftime(now, due);
-    if (diffSeconds <= 0) { return "Not overdue"; }
+    double diffSeconds = std::difftime(now, due);
+    if (diffSeconds <= 0) { return std::string("Not overdue"); }
 
-	long long totalSeconds = static_cast<long long>(diffSeconds);
+    long long totalSeconds = static_cast<long long>(diffSeconds);
 
-	int weeks = totalSeconds / (7 * 24 * 3600);
-	totalSeconds %= (7 * 24 * 3600);
+    int weeks = static_cast<int>(totalSeconds / (7 * 24 * 3600));
+    totalSeconds %= (7LL * 24 * 3600);
 
-	int days = totalSeconds / (24 * 3600);
-	totalSeconds %= (24 * 3600);
+    int days = static_cast<int>(totalSeconds / (24 * 3600));
+    totalSeconds %= (24 * 3600);
 
-	int hours = totalSeconds / 3600;
-	totalSeconds %= 3600;
+    int hours = static_cast<int>(totalSeconds / 3600);
+    totalSeconds %= 3600;
 
-	int minutes = totalSeconds / 60;
-	int seconds = totalSeconds % 60;
+    int minutes = static_cast<int>(totalSeconds / 60);
+    int seconds = static_cast<int>(totalSeconds % 60);
 
-	std::string result = "";
-	if (weeks > 0) { result += std::to_string(weeks) + " week(s) "; }
-	if (days > 0) { result += std::to_string(days) + " day(s) "; }
-	if (hours > 0) { result += std::to_string(hours) + " hour(s) "; }
-	if (minutes > 0) { result += std::to_string(minutes) + " minute(s) "; }
+    std::string result;
+    if (weeks > 0) { result += std::to_string(weeks) + " week(s) "; }
+    if (days > 0) { result += std::to_string(days) + " day(s) "; }
+    if (hours > 0) { result += std::to_string(hours) + " hour(s) "; }
+    if (minutes > 0) { result += std::to_string(minutes) + " minute(s) "; }
     result += std::to_string(seconds) + " second(s)";
 
-	return result;
+    return result;
 }
 
 int calculateDaysDifference(const std::tm& dueDate, const std::tm& currentDate) {
