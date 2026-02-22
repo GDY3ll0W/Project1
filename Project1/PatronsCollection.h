@@ -39,6 +39,9 @@ public:
 
 private:
     std::vector<Patron*> patronsList; // A vector to store pointers to Patron objects
+
+    // Unique incremental ID generator for patrons (ensures stable unique IDs even after deletions)
+    static int nextPatronID;
 };
 
 #endif // PATRONSCOLLECTION_H

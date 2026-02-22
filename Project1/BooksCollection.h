@@ -2,6 +2,7 @@
 #define BOOKSCOLLECTION_H
 
 #include <vector>
+#include <string> // Include the string header for std::string (Forgot to add on for the BooksCollection.cpp)
 #include "Books.h"
 
 class BooksCollection {

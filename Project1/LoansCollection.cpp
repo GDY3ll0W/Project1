@@ -2,8 +2,11 @@
 #include <iostream>
 #include <ctime>
 #include <algorithm>
+#include <string>
+#include <iomanip>
 
-std::tm getCurrentDate() {
+//This is the original work; delete the comment section if the new ones don't work.
+/*std::tm getCurrentDate() {
     std::time_t t = std::time(nullptr);
     std::tm tm;
 #if defined(_MSC_VER)
@@ -12,12 +15,70 @@ std::tm getCurrentDate() {
     localtime_r(&t, &tm);
 #endif
     return tm;
+}*/
+
+//NEW Section: -------------------- This uses helper functions to prevent linker errors.
+static std::tm getCurrentDate() {
+    std::time_t t = std::time(nullptr);
+    std::tm tm;
+#if defined(_MSC_VER)
+    // Microsoft secure version
+    localtime_s(&tm, &t);
+#else
+    // POSIX version
+    localtime_r(&t, &tm);
+#endif
+    return tm;
 }
+//---------------------------------
 
 std::string tmToString(const std::tm& date) {
-    char buffer[11];
-    strftime(buffer, sizeof(buffer), "%d-%m-%Y", &date);
+    char buffer[40]; // room for date and time
+    // Western order: month-day-year and time HH:MM:SS
+    strftime(buffer, sizeof(buffer), "%m-%d-%Y %H:%M:%S", &date);
     return std::string(buffer);
+}
+
+//NEW Section: -------------------- This checks to see if the loan is overdue
+static bool isOverDue(const std::tm& dueDate) {
+    std::time_t now = std::time(nullptr);
+	std::tm dueCopy = dueDate; // Create a copy to avoid modifying the original
+    std::time_t due = std::mktime(&dueCopy);
+	return std::difftime(now, due) > 0; // If now is after due, it's overdue
+}
+//---------------------------------
+
+//New Section: -------------------- This Calculates the exact overdue time in weeks, days, hours, minutes, and seconds.
+static std::string getDetailedOverdueTime(const std::tm& dueDate) {
+    std::time_t now = std::time(nullptr);
+    std::tm dueCopy = dueDate;
+    std::time_t due = std::mktime(&dueCopy);
+
+    double diffSeconds = std::difftime(now, due);
+    if (diffSeconds <= 0) { return std::string("Not overdue"); }
+
+    long long totalSeconds = static_cast<long long>(diffSeconds);
+
+    int weeks = static_cast<int>(totalSeconds / (7 * 24 * 3600));
+    totalSeconds %= (7LL * 24 * 3600);
+
+    int days = static_cast<int>(totalSeconds / (24 * 3600));
+    totalSeconds %= (24 * 3600);
+
+    int hours = static_cast<int>(totalSeconds / 3600);
+    totalSeconds %= 3600;
+
+    int minutes = static_cast<int>(totalSeconds / 60);
+    int seconds = static_cast<int>(totalSeconds % 60);
+
+    std::string result;
+    if (weeks > 0) { result += std::to_string(weeks) + " week(s) "; }
+    if (days > 0) { result += std::to_string(days) + " day(s) "; }
+    if (hours > 0) { result += std::to_string(hours) + " hour(s) "; }
+    if (minutes > 0) { result += std::to_string(minutes) + " minute(s) "; }
+    result += std::to_string(seconds) + " second(s)";
+
+    return result;
 }
 
 int calculateDaysDifference(const std::tm& dueDate, const std::tm& currentDate) {
@@ -73,8 +134,10 @@ void LoansCollection::CheckInBook(PatronsCollection &allPatrons, BooksCollection
     });
 
     if (it != loansList.end()) {
+        // Save pointer before erasing the iterator (erase invalidates the iterator)
+        Loans* loanPtr = *it;
         loansList.erase(it);
-        delete *it; // Assuming dynamic allocation of loans
+        delete loanPtr; // free the dynamically allocated loan
         book->setCurrentBookStatus(Books::IN);
         patron->setNumBooks(patron->getNumBooks() - 1);
         std::cout << "Book checked in successfully.\n";
@@ -85,12 +148,39 @@ void LoansCollection::CheckInBook(PatronsCollection &allPatrons, BooksCollection
 
 void LoansCollection::ListAllOverdueBooks() {
     std::cout << "Overdue Books:\n";
+    bool found = false;
     for (auto* loan : loansList) {
         std::tm dueDate = loan->getDueDate();
         std::tm today = getCurrentDate();
-        if (calculateDaysDifference(dueDate, today) > 0) {
+        // If dueDate is before today, the difference (due - today) will be negative.
+        // We consider a loan overdue when today is after the due date.
+        if (calculateDaysDifference(dueDate, today) < 0) {
             std::cout << "Loan ID " << loan->getLoanID() << " is overdue.\n";
+            found = true;
         }
+    }
+
+    if (!found) {
+        std::cout << "There are no overdue books" << std::endl;
+    }
+
+}
+
+void LoansCollection::ListAllCheckedOutBooks(BooksCollection &allBooks) {
+    std::cout << "Checked Out Books:\n";
+    bool found = false;
+    for (auto* loan : loansList) {
+        if (loan->getStatus() != Loans::RETURNED) {
+            Books* book = allBooks.FindBookByID(loan->getBookID());
+            std::string title = book ? book->getTitle() : std::string("<unknown>");
+            std::cout << "Loan ID " << loan->getLoanID() << ", Book ID " << loan->getBookID()
+                      << ", Title: " << title << ", Patron ID " << loan->getPatronID()
+                      << ", Due Date: " << tmToString(loan->getDueDate()) << "\n";
+            found = true;
+        }
+    }
+    if (!found) {
+        std::cout << "There are no checked out books" << std::endl;
     }
 }
 

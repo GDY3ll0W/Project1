@@ -1,7 +1,7 @@
 #ifndef LOANS_H
 #define LOANS_H
 
-#include <string>
+//#include <string>
 #include <ctime>
 
 class Loans {

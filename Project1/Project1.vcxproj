@@ -132,6 +132,7 @@
     <ClInclude Include="Loans.h" />
     <ClInclude Include="LoansCollection.h" />
     <ClInclude Include="Patron.h" />
+    <ClInclude Include="PatronsCollection.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Books.cpp" />
