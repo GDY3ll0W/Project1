@@ -170,6 +170,11 @@ Patron* PatronsCollection::FindPatronByID(int id) {
 // Print All
 void PatronsCollection::PrintAllPatrons() const {
     cout << "\n--- List of All Patrons ---\n";
+    if (patronsList.empty()) {
+        cout << "There are no patrons." << endl;
+        return;
+    }
+
     for (const auto* patron : patronsList) {
         cout << "ID: " << patron->getPatronID()
             << ", Name: " << patron->getName()
