@@ -21,6 +21,84 @@ T getNumericInput(const string& prompt) {
     return input;
 }
 
+// Forward helper input functions (moved above usages to avoid identifier-not-found errors)
+string getStringInput(const string& prompt);
+int getIntInput(const string& prompt);
+
+// Definition of static member declared in header
+int PatronsCollection::nextPatronID = 0;
+
+// Helper input functions
+
+// Edit a patron's details
+void PatronsCollection::EditPatron() {
+    cout << "\n--- Edit Patron ---\n";
+    Patron* patron = PromptForSearchMechanism();
+    if (!patron) {
+        cout << "Patron not found.\n";
+        return;
+    }
+    string newName = getStringInput("Enter new full name (leave blank to keep current): ");
+    if (!newName.empty()) {
+        patron->setName(newName);
+    }
+    // Optionally edit fines
+    cout << "Current fine balance: $" << patron->getFineBalance() << "\n";
+    cout << "Enter new fine balance (or press Enter to keep current): ";
+    string line;
+    getline(cin, line);
+    if (!line.empty()) {
+        try {
+            float f = stof(line);
+            patron->setFineBalance(f);
+        } catch (...) {
+            cout << "Invalid fine value entered; keeping current.\n";
+        }
+    }
+    cout << "Patron updated.\n";
+}
+
+// Delete a patron
+void PatronsCollection::DeletePatron() {
+    cout << "\n--- Delete Patron ---\n";
+    Patron* patron = PromptForSearchMechanism();
+    if (!patron) {
+        cout << "Patron not found.\n";
+        return;
+    }
+    auto it = std::find(patronsList.begin(), patronsList.end(), patron);
+    if (it != patronsList.end()) {
+        delete *it;
+        patronsList.erase(it);
+        cout << "Patron deleted.\n";
+    }
+}
+
+// Print a single patron's details
+void PatronsCollection::PrintPatron() {
+    Patron* patron = PromptForSearchMechanism();
+    if (!patron) {
+        cout << "Patron not found.\n";
+        return;
+    }
+    cout << "ID: " << patron->getPatronID() << ", Name: " << patron->getName()
+         << ", Fines: $" << patron->getFineBalance() << ", Books Checked Out: " << patron->getNumBooks() << "\n";
+}
+
+// Pay fine for a patron
+void PatronsCollection::PayFine() {
+    Patron* patron = PromptForSearchMechanism();
+    if (!patron) {
+        cout << "Patron not found.\n";
+        return;
+    }
+    cout << "Current fine balance: $" << patron->getFineBalance() << "\n";
+    float amount = getNumericInput<float>("Enter payment amount: ");
+    float newBal = patron->getFineBalance() - amount;
+    if (newBal < 0) newBal = 0;
+    patron->setFineBalance(newBal);
+    cout << "Payment applied. New balance: $" << patron->getFineBalance() << "\n";
+}
 string getStringInput(const string& prompt) {
     cout << prompt;
     string input;
@@ -46,7 +124,7 @@ void PatronsCollection::AddPatron() {
     string firstName = getStringInput("Enter patron's first name: ");
     string lastName = getStringInput("Enter patron's last name: ");
 
-    int ID = patronsList.size();
+    int ID = static_cast<int>(patronsList.size());
     string fullName = firstName + " " + lastName;
 
     Patron* patron = new Patron(fullName, ID);

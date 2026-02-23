@@ -37,6 +37,10 @@ public:
     // Handles the payment of fines for a specific patron
     void PayFine();
 
+    // Checkout and Return helpers (used by UI)
+    void CheckoutBook();
+    void ReturnBook();
+
 private:
     std::vector<Patron*> patronsList; // A vector to store pointers to Patron objects
 

@@ -19,6 +19,12 @@ public:
     float getFineBalance() const;
     int getNumBooks() const;
 
+    // Book limit and helper methods
+    static const int MAX_BOOKS; // maximum books a patron can check out
+    bool canCheckout() const;
+    bool checkoutBook();
+    void returnBook();
+
     // Setters for Patron attributes
     void setName(std::string nm);
     void setPatronID(int ID);
