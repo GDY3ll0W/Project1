@@ -190,12 +190,33 @@ void LoansCollection::ListBooksForPatron(PatronsCollection &allPatrons, BooksCol
         std::cout << "Patron not found.\n";
         return;
     }
-
     std::cout << "Books checked out by " << patron->getName() << ":\n";
+
+    int count = 0;
     for (auto* loan : loansList) {
-        if (loan->getPatronID() == patron->getPatronID()) {
+        if (loan->getPatronID() == patron->getPatronID() && loan->getStatus() != Loans::LoanStatus::RETURNED) {
+            ++count;
+        }
+    }
+
+    if (count == 0) {
+        std::cout << "No books currently checked out by this patron." << std::endl;
+        return;
+    }
+
+    std::cout << "You still have " << count << " book(s) checked out." << std::endl;
+    for (auto* loan : loansList) {
+        if (loan->getPatronID() == patron->getPatronID() && loan->getStatus() != Loans::LoanStatus::RETURNED) {
             Books* book = allBooks.FindBookByID(loan->getBookID());
-            std::cout << "Title: " << book->getTitle() << ", Due Date: " << tmToString(loan->getDueDate()) << "\n";
+            if (book) {
+                std::cout << " - Loan ID: " << loan->getLoanID()
+                          << ", Book ID: " << book->getLibraryID()
+                          << ", Title: " << book->getTitle()
+                          << ", Cost: $" << std::fixed << std::setprecision(2) << book->getCost()
+                          << ", Due: " << tmToString(loan->getDueDate())
+                          << ", Status: " << (loan->getStatus() == Loans::OVERDUE ? "Overdue" : "Checked Out")
+                          << std::endl;
+            }
         }
     }
 }
@@ -208,19 +229,32 @@ void LoansCollection::ListBooksForPatronByID(PatronsCollection &allPatrons, Book
     }
 
     std::cout << "Books checked out by " << patron->getName() << " (ID: " << patronID << "):\n";
-    bool found = false;
+    int found = 0;
+    for (auto* loan : loansList) {
+        if (loan->getPatronID() == patronID && loan->getStatus() != Loans::LoanStatus::RETURNED) {
+            ++found;
+        }
+    }
+
+    if (found == 0) {
+        std::cout << "No books currently checked out by this patron." << std::endl;
+        return;
+    }
+
+    std::cout << "You still have " << found << " book(s) checked out." << std::endl;
     for (auto* loan : loansList) {
         if (loan->getPatronID() == patronID && loan->getStatus() != Loans::LoanStatus::RETURNED) {
             Books* book = allBooks.FindBookByID(loan->getBookID());
             if (book) {
-                std::cout << " - Title: " << book->getTitle() << ", Due Date: " << tmToString(loan->getDueDate())
-                          << ", Status: " << (loan->getStatus() == Loans::OVERDUE ? "Overdue" : "Checked Out") << "\n";
-                found = true;
+                std::cout << " - Loan ID: " << loan->getLoanID()
+                          << ", Book ID: " << book->getLibraryID()
+                          << ", Title: " << book->getTitle()
+                          << ", Cost: $" << std::fixed << std::setprecision(2) << book->getCost()
+                          << ", Due: " << tmToString(loan->getDueDate())
+                          << ", Status: " << (loan->getStatus() == Loans::OVERDUE ? "Overdue" : "Checked Out")
+                          << std::endl;
             }
         }
-    }
-    if (!found) {
-        std::cout << "No books currently checked out by this patron.\n";
     }
 }
 
