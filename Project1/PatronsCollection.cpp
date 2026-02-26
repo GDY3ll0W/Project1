@@ -204,9 +204,9 @@ void PatronsCollection::CheckoutBook() {
     }
 }
 
-// -----------------------------
+
 // NEW RETURN FUNCTION
-// -----------------------------
+
 void PatronsCollection::ReturnBook() {
     cout << "\n--- Return a Book ---\n";
     Patron* patron = PromptForSearchMechanism();

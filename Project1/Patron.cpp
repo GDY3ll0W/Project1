@@ -46,9 +46,8 @@ void Patron::setNumBooks(int num) {
     numBooks = num;
 }
 
-// -----------------------------
 // NEW LIMIT FUNCTIONS
-// -----------------------------
+
 
 bool Patron::canCheckout() const {
     return numBooks < MAX_BOOKS;
