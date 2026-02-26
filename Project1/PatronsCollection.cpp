@@ -124,13 +124,16 @@ void PatronsCollection::AddPatron() {
     string firstName = getStringInput("Enter patron's first name: ");
     string lastName = getStringInput("Enter patron's last name: ");
 
-    int ID = static_cast<int>(patronsList.size());
+    // Assign a unique incremental ID and create the patron
+    int ID = nextPatronID++;
     string fullName = firstName + " " + lastName;
 
     Patron* patron = new Patron(fullName, ID);
     patronsList.push_back(patron);
 
-    cout << "Patron added successfully.\n";
+    // Print first name, last name and assigned ID, then confirmation message
+    cout << "First Name: " << firstName << ", Last Name: " << lastName << ", Assigned ID: " << ID << "\n";
+    cout << "Patron added successfully." << "\n";
 }
 
 // Search Options
