@@ -3,6 +3,7 @@
 #include <vector>
 #include <limits>
 #include <algorithm>
+#include <cctype>
 #include "PatronsCollection.h"
 #include "Patron.h"
 
@@ -121,8 +122,34 @@ int getIntInput(const string& prompt) {
 // Add Patron
 void PatronsCollection::AddPatron() {
     cout << "\n--- Add a New Patron ---\n";
-    string firstName = getStringInput("Enter patron's first name: ");
-    string lastName = getStringInput("Enter patron's last name: ");
+    // Get and validate first and last name: only letters allowed (a-z, A-Z)
+    auto isAlphaOnly = [](const string& s) {
+        if (s.empty()) return false;
+        for (unsigned char ch : s) {
+            if (!std::isalpha(ch)) return false;
+        }
+        return true;
+    };
+
+    string firstName;
+    while (true) {
+        firstName = getStringInput("Enter patron's first name: ");
+        if (!isAlphaOnly(firstName)) {
+            cout << "Please enter letters only (a-z or A-Z) for the first name." << endl;
+            continue;
+        }
+        break;
+    }
+
+    string lastName;
+    while (true) {
+        lastName = getStringInput("Enter patron's last name: ");
+        if (!isAlphaOnly(lastName)) {
+            cout << "Please enter letters only (a-z or A-Z) for the last name." << endl;
+            continue;
+        }
+        break;
+    }
 
     // Assign a unique incremental ID and create the patron
     int ID = nextPatronID++;
