@@ -2,7 +2,7 @@
 #include <iostream>
 
 // Maximum books allowed per patron
-const int Patron::MAX_BOOKS = 5;
+const int Patron::MAX_BOOKS = 3;
 
 // Constructs a Patron with a name and ID.
 Patron::Patron(std::string nm, int ID)

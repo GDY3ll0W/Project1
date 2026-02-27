@@ -90,8 +90,16 @@ int calculateDaysDifference(const std::tm& dueDate, const std::tm& currentDate) 
 
 void LoansCollection::CheckOutBook(PatronsCollection &allPatrons, BooksCollection &allBooks) {
     Patron* patron = allPatrons.PromptForSearchMechanism();
-    if (!patron || patron->getNumBooks() >= 6 || patron->getFineBalance() > 0) {
-        std::cout << "Checkout conditions not met.\n";
+    if (!patron) {
+        std::cout << "Patron not found.\n";
+        return;
+    }
+    if (patron->getFineBalance() > 0) {
+        std::cout << "Patron has outstanding fines. Cannot checkout until fines are paid.\n";
+        return;
+    }
+    if (!patron->canCheckout()) {
+        std::cout << "You can only have 3 books checked Out." << std::endl;
         return;
     }
 
@@ -106,12 +114,14 @@ void LoansCollection::CheckOutBook(PatronsCollection &allPatrons, BooksCollectio
     mktime(&dueDate); 
     Loans* loan = new Loans(book->getLibraryID(), patron->getPatronID(), dueDate);
 
+
     loan->setBookID(book->getLibraryID());
     loan->setPatronID(patron->getPatronID());
     loansList.push_back(loan);
 
     book->setCurrentBookStatus(Books::OUT);
-    patron->setNumBooks(patron->getNumBooks() + 1);
+    // Use Patron helper to increment with limit checking
+    patron->checkoutBook();
 
     std::cout << "Book checked out successfully.\n";
 }

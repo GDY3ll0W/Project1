@@ -199,7 +199,7 @@ void PatronsCollection::CheckoutBook() {
             cout << "Book checked out successfully.\n";
         }
         else {
-            cout << "Checkout limit reached (5 books max).\n";
+            cout << "You can only have 3 books checked Out." << endl;
         }
     }
     else {
