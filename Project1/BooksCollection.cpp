@@ -37,11 +37,39 @@ void BooksCollection::AddBook() {
     float cost = 0.0f;
     int statusChoice = 0;
 
-    std::cout << "Enter author: ";
-    if (!std::getline(std::cin >> std::ws, author)) return;
+    // Author: allow letters and spaces only
+    auto isAlphaSpaceOnly = [](const std::string& s) {
+        if (s.empty()) return false;
+        bool hasLetter = false;
+        for (unsigned char ch : s) {
+            if (std::isalpha(ch)) hasLetter = true;
+            if (!(std::isalpha(ch) || std::isspace(ch))) return false;
+        }
+        return hasLetter;
+    };
 
-    std::cout << "Enter title: ";
-    if (!std::getline(std::cin >> std::ws, title)) return;
+    while (true) {
+        std::cout << "Enter author: ";
+        if (!std::getline(std::cin >> std::ws, author)) return;
+        author = trim(author);
+        if (!isAlphaSpaceOnly(author)) {
+            std::cout << "Please enter letters and spaces only for the author." << std::endl;
+            continue;
+        }
+        break;
+    }
+
+    // Title: allow letters and spaces only
+    while (true) {
+        std::cout << "Enter title: ";
+        if (!std::getline(std::cin >> std::ws, title)) return;
+        title = trim(title);
+        if (!isAlphaSpaceOnly(title)) {
+            std::cout << "Please enter letters and spaces only for the title." << std::endl;
+            continue;
+        }
+        break;
+    }
 
     // Read integers/floats from full lines to avoid mixing operator>> and getline.
     // Read ISBN as a 10-digit numeric string (exactly 10 digits required)
@@ -132,17 +160,55 @@ void BooksCollection::EditBook() {
 
     switch (choice) {
         case 1: {
+            // Validate title: letters and spaces only
+            auto isAlphaSpaceOnly = [](const std::string& s) {
+                if (s.empty()) return false;
+                bool hasLetter = false;
+                for (unsigned char ch : s) {
+                    if (std::isalpha(ch)) hasLetter = true;
+                    if (!(std::isalpha(ch) || std::isspace(ch))) return false;
+                }
+                return hasLetter;
+            };
+
             std::string newTitle;
-            std::cout << "Enter new title: ";
-            std::getline(std::cin, newTitle);
-            book->setTitle(newTitle);
+            while (true) {
+                std::cout << "Enter new title: ";
+                if (!std::getline(std::cin, newTitle)) { std::cout << "Invalid title. No change made.\n"; break; }
+                newTitle = trim(newTitle);
+                if (!isAlphaSpaceOnly(newTitle)) {
+                    std::cout << "Please enter letters and spaces only for the title." << std::endl;
+                    continue;
+                }
+                book->setTitle(newTitle);
+                break;
+            }
             break;
         }
         case 2: {
+            // Validate author: letters and spaces only
+            auto isAlphaSpaceOnly = [](const std::string& s) {
+                if (s.empty()) return false;
+                bool hasLetter = false;
+                for (unsigned char ch : s) {
+                    if (std::isalpha(ch)) hasLetter = true;
+                    if (!(std::isalpha(ch) || std::isspace(ch))) return false;
+                }
+                return hasLetter;
+            };
+
             std::string newAuthor;
-            std::cout << "Enter new author: ";
-            std::getline(std::cin, newAuthor);
-            book->setAuthor(newAuthor);
+            while (true) {
+                std::cout << "Enter new author: ";
+                if (!std::getline(std::cin, newAuthor)) { std::cout << "Invalid author. No change made.\n"; break; }
+                newAuthor = trim(newAuthor);
+                if (!isAlphaSpaceOnly(newAuthor)) {
+                    std::cout << "Please enter letters and spaces only for the author." << std::endl;
+                    continue;
+                }
+                book->setAuthor(newAuthor);
+                break;
+            }
             break;
         }
         case 3: {
