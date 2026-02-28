@@ -90,28 +90,44 @@ void BooksCollection::AddBook() {
     }
 
     while (true) {
-        std::cout << "Enter Library ID (integer): ";
+        std::cout << "Enter Library ID (positive integer): ";
         if (!std::getline(std::cin, line)) return;
         line = trim(line);
         if (line.empty()) continue;
+        // Validate digits only
+        bool ok = true;
+        for (char c : line) if (!std::isdigit(static_cast<unsigned char>(c))) { ok = false; break; }
+        if (!ok) { std::cout << "Please enter a positive integer for Library ID" << std::endl; continue; }
         try {
             libraryID = std::stoi(line);
+            if (libraryID <= 0) { std::cout << "Please enter a positive integer for Library ID" << std::endl; continue; }
             break;
         } catch (...) {
-            std::cout << "Invalid Library ID. Enter an integer.\n";
+            std::cout << "Please enter a positive integer for Library ID" << std::endl;
         }
     }
 
     while (true) {
-        std::cout << "Enter cost (decimal): ";
+        std::cout << "Enter cost (positive number): ";
         if (!std::getline(std::cin, line)) return;
         line = trim(line);
         if (line.empty()) continue;
+        // Validate positive decimal number with optional one dot
+        bool ok = false;
+        int dots = 0;
+        int digits = 0;
+        for (unsigned char c : line) {
+            if (std::isdigit(c)) { ok = true; ++digits; }
+            else if (c == '.') { ++dots; if (dots > 1) { ok = false; break; } }
+            else { ok = false; break; }
+        }
+        if (!ok || digits == 0) { std::cout << "Please enter a non-negative number" << std::endl; continue; }
         try {
             cost = std::stof(line);
+            if (cost < 0.0f) { std::cout << "Please enter a non-negative number" << std::endl; continue; }
             break;
         } catch (...) {
-            std::cout << "Invalid cost. Enter a number.\n";
+            std::cout << "Please enter a non-negative number" << std::endl;
         }
     }
 
@@ -226,16 +242,32 @@ void BooksCollection::EditBook() {
             break;
         }
         case 4: {
-            float newCost;
-            std::cout << "Enter new cost: ";
-            if (std::cin >> newCost) {
-                book->setCost(newCost);
-            } else {
-                std::cin.clear();
-                std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-                std::cout << "Invalid cost. No change made.\n";
+            // Read cost as a positive decimal number (no letters, no negatives)
+            std::string costLine;
+            while (true) {
+                std::cout << "Enter new cost: ";
+                if (!std::getline(std::cin, costLine)) { std::cout << "Invalid cost. No change made.\n"; break; }
+                costLine = trim(costLine);
+                if (costLine.empty()) { std::cout << "Please enter a positive number" << std::endl; continue; }
+                bool ok = false;
+                int dots = 0;
+                int digits = 0;
+                for (unsigned char c : costLine) {
+                    if (std::isdigit(c)) { ok = true; ++digits; }
+                    else if (c == '.') { ++dots; if (dots > 1) { ok = false; break; } }
+                    else { ok = false; break; }
+                }
+                if (!ok || digits == 0) { std::cout << "Please enter a non-negative number" << std::endl; continue; }
+                try {
+                    float newCost = std::stof(costLine);
+                    if (newCost < 0.0f) { std::cout << "Please enter a non-negative number" << std::endl; continue; }
+                    book->setCost(newCost);
+                } catch (...) {
+                    std::cout << "Please enter a non-negative number" << std::endl;
+                    continue;
+                }
+                break;
             }
-            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); // Clear the buffer
             break;
         }
         default:
