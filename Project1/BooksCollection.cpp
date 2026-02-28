@@ -32,7 +32,8 @@ void BooksCollection::AddBook() {
     // Use getline with std::ws to skip any leftover whitespace/newline so the user
     // doesn't have to press Enter twice.
     std::string author, title, line;
-    int isbn = 0, libraryID = 0;
+    std::string isbn;
+    int libraryID = 0;
     float cost = 0.0f;
     int statusChoice = 0;
 
@@ -43,18 +44,22 @@ void BooksCollection::AddBook() {
     if (!std::getline(std::cin >> std::ws, title)) return;
 
     // Read integers/floats from full lines to avoid mixing operator>> and getline.
+    // Read ISBN as a 10-digit numeric string (exactly 10 digits required)
     while (true) {
-        std::cout << "Enter ISBN (integer): ";
+        std::cout << "Enter ISBN (10 digits): ";
         if (!std::getline(std::cin, line)) return;
         line = trim(line);
         if (line.empty()) continue;
-        try {
-            isbn = std::stoi(line);
-            break;
-        } catch (...) {
-            std::cout << "Invalid ISBN. Enter an integer.\n";
+        // Validate exactly 10 digits
+        bool ok = (line.size() == 10);
+        for (char c : line) if (!std::isdigit(static_cast<unsigned char>(c))) { ok = false; break; }
+        if (!ok) {
+            std::cout << "Please write 10 numbers" << std::endl;
+            continue;
         }
-    } //Still allows decimals and negative numbers for some reason?
+        isbn = line;
+        break;
+    }
 
     while (true) {
         std::cout << "Enter Library ID (integer): ";
@@ -141,16 +146,17 @@ void BooksCollection::EditBook() {
             break;
         }
         case 3: {
-            int newISBN;
-            std::cout << "Enter new ISBN: ";
-            if (std::cin >> newISBN) {
-                book->setISBN(newISBN);
+            std::string newISBN;
+            std::cout << "Enter new ISBN (10 digits): ";
+            if (!std::getline(std::cin, newISBN)) { std::cout << "Invalid ISBN. No change made.\n"; break; }
+            newISBN = trim(newISBN);
+            bool ok = (newISBN.size() == 10);
+            for (char c : newISBN) if (!std::isdigit(static_cast<unsigned char>(c))) { ok = false; break; }
+            if (!ok) {
+                std::cout << "Please write 10 numbers" << std::endl;
             } else {
-                std::cin.clear();
-                std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-                std::cout << "Invalid ISBN. No change made.\n";
+                book->setISBN(newISBN);
             }
-            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); // Clear the buffer
             break;
         }
         case 4: {
@@ -218,20 +224,21 @@ Books* BooksCollection::PromptForSearchMechanism() {
         title = trim(title);
         return FindBookByTitle(title);
     } else if (choice == 2) {
-        int isbn = 0;
+        std::string isbnInput;
         while (true) {
-            std::cout << "Enter ISBN: ";
-            if (!std::getline(std::cin, line)) return nullptr;
-            line = trim(line);
-            if (line.empty()) continue;
-            try {
-                isbn = std::stoi(line);
-                break;
-            } catch (...) {
-                std::cout << "Invalid ISBN. Enter an integer.\n";
+            std::cout << "Enter ISBN (10 digits): ";
+            if (!std::getline(std::cin, isbnInput)) return nullptr;
+            isbnInput = trim(isbnInput);
+            if (isbnInput.empty()) continue;
+            bool ok = (isbnInput.size() == 10);
+            for (char c : isbnInput) if (!std::isdigit(static_cast<unsigned char>(c))) { ok = false; break; }
+            if (!ok) {
+                std::cout << "Please write 10 numbers" << std::endl;
+                continue;
             }
+            break;
         }
-        return FindBookByISBN(isbn);
+        return FindBookByISBN(isbnInput);
     } else { // choice == 3
         int id = 0;
         while (true) {
@@ -258,7 +265,7 @@ Books* BooksCollection::FindBookByTitle(const std::string& title) {
     return nullptr;
 }
 
-Books* BooksCollection::FindBookByISBN(int isbn) {
+Books* BooksCollection::FindBookByISBN(const std::string& isbn) {
     for (auto* book : booksList) {
         if (book->getISBN() == isbn) return book;
     }

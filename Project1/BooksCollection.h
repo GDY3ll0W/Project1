@@ -15,7 +15,7 @@ public:
     void DeleteBook();
     Books* PromptForSearchMechanism();
     Books* FindBookByTitle(const std::string& title);
-    Books* FindBookByISBN(int isbn);
+    Books* FindBookByISBN(const std::string& isbn);
     Books* FindBookByID(int id);
     void PrintAllBooks() const;
     void PrintBook();
