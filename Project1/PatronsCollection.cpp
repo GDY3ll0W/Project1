@@ -27,7 +27,8 @@ string getStringInput(const string& prompt);
 int getIntInput(const string& prompt);
 
 // Definition of static member declared in header
-int PatronsCollection::nextPatronID = 0;
+// Start IDs at 1 so the first patron receives ID 1 (no zero ID)
+int PatronsCollection::nextPatronID = 1;
 
 // Helper input functions
 
