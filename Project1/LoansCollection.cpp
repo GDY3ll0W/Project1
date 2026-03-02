@@ -150,7 +150,8 @@ void LoansCollection::CheckInBook(PatronsCollection &allPatrons, BooksCollection
         delete loanPtr; // free the dynamically allocated loan
         book->setCurrentBookStatus(Books::IN);
         patron->setNumBooks(patron->getNumBooks() - 1);
-        std::cout << "Book checked in successfully.\n";
+        std::cout << "Book checked in successfully." << std::endl;
+        std::cout << "You still have " << patron->getNumBooks() << " book(s) checked out." << std::endl;
     } else {
         std::cout << "Loan record not found.\n";
     }

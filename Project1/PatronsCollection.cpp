@@ -244,7 +244,8 @@ void PatronsCollection::ReturnBook() {
 
     if (patron != nullptr) {
         patron->returnBook();
-        cout << "Book returned successfully.\n";
+        cout << "Book returned successfully." << endl;
+        cout << "You still have " << patron->getNumBooks() << " book(s) checked out." << endl;
     }
     else {
         cout << "Patron not found.\n";
