@@ -94,6 +94,8 @@ void BooksCollection::AddBook() {
         if (!std::getline(std::cin, line)) return;
         line = trim(line);
         if (line.empty()) continue;
+        // Require exactly 8 digits for Library ID
+        if (line.size() != 8) { std::cout << "You can only input 8 positive integers" << std::endl; continue; }
         // Validate digits only
         bool ok = true;
         for (char c : line) if (!std::isdigit(static_cast<unsigned char>(c))) { ok = false; break; }
@@ -344,11 +346,17 @@ Books* BooksCollection::PromptForSearchMechanism() {
             if (!std::getline(std::cin, line)) return nullptr;
             line = trim(line);
             if (line.empty()) continue;
+            // Require exactly 8 digits for ID
+            if (line.size() != 8) { std::cout << "You can only input 8 positive integers" << std::endl; continue; }
+            bool ok = true;
+            for (char c : line) if (!std::isdigit(static_cast<unsigned char>(c))) { ok = false; break; }
+            if (!ok) { std::cout << "Invalid ID. Enter a positive integer." << std::endl; continue; }
             try {
                 id = std::stoi(line);
+                if (id <= 0) { std::cout << "Invalid ID. Enter a positive integer." << std::endl; continue; }
                 break;
             } catch (...) {
-                std::cout << "Invalid ID. Enter an integer.\n";
+                std::cout << "Invalid ID. Enter a positive integer." << std::endl;
             }
         }
         return FindBookByID(id);
