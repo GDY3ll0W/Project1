@@ -72,21 +72,37 @@ static std::string getDetailedOverdueTime(const std::tm& dueDate) {
     int seconds = static_cast<int>(totalSeconds % 60);
 
     std::string result;
-    if (weeks > 0) { result += std::to_string(weeks) + " week(s) "; }
-    if (days > 0) { result += std::to_string(days) + " day(s) "; }
-    if (hours > 0) { result += std::to_string(hours) + " hour(s) "; }
-    if (minutes > 0) { result += std::to_string(minutes) + " minute(s) "; }
-    result += std::to_string(seconds) + " second(s)";
+    if (weeks > 0) { result += std::to_string(weeks) + "w, "; }
+    if (days > 0) { result += std::to_string(days) + "d, "; }
+    if (hours > 0) { result += std::to_string(hours) + "h, "; }
+    if (minutes > 0) { result += std::to_string(minutes) + "m, "; }
+    result += std::to_string(seconds) + "s";
 
     return result;
 }
 
-int calculateDaysDifference(const std::tm& dueDate, const std::tm& currentDate) {
+//New SECTION: -------------------- New Fine Calculation Function ($1 per 30 seconds)
+
+static float calculateAccurateFine(const std::tm& dueDate) {
+	std::time_t now = std::time(nullptr);
+	std::tm dueCopy = dueDate;
+	std::time_t due = std::mktime(&dueCopy);
+
+    double diffSeconds = std::difftime(now, due);
+
+	if (diffSeconds <= 0) { return 0.0f; } //No fine if not overdue
+    
+	int intervals = static_cast<int(diffSeconds) / 30); // $1 per 30 seconds
+
+	return static_cast<float>(intervals * 1.0f); // $1 fine per interval
+}
+
+/*int calculateDaysDifference(const std::tm& dueDate, const std::tm& currentDate) {
     std::time_t due_time = std::mktime(const_cast<std::tm*>(&dueDate));
     std::time_t current_time = std::mktime(const_cast<std::tm*>(&currentDate));
     const double secondsPerDay = 60 * 60 * 24;
     return static_cast<int>(std::difftime(due_time, current_time) / secondsPerDay);
-}
+}*/
 
 void LoansCollection::CheckOutBook(PatronsCollection &allPatrons, BooksCollection &allBooks) {
     Patron* patron = allPatrons.PromptForSearchMechanism();
@@ -110,7 +126,7 @@ void LoansCollection::CheckOutBook(PatronsCollection &allPatrons, BooksCollectio
     }
 
     std::tm dueDate = getCurrentDate(); 
-    dueDate.tm_mday += 7; 
+    dueDate.tm_mday += 10; 
     mktime(&dueDate); 
     Loans* loan = new Loans(book->getLibraryID(), patron->getPatronID(), dueDate);
 
@@ -146,12 +162,31 @@ void LoansCollection::CheckInBook(PatronsCollection &allPatrons, BooksCollection
     if (it != loansList.end()) {
         // Save pointer before erasing the iterator (erase invalidates the iterator)
         Loans* loanPtr = *it;
-        loansList.erase(it);
+		
+		//NEW SECTION-------------------------------------------------
+		float fineOwed = calculateAccurateFine(loan->getDueDate());
+		if (fineOwed > 0 {
+			patron->setFineBalance(patron->getFineBalance() + fineOwed);
+			std::cout << "\n*** LATE RETURN ***\n";
+			std::cout << "Time Overdue: " << getDetailedOverDueTime(loan->getDueDate()) << "\n";
+			std::cout << "A fine of $" << fineOwed << " has been added to the patron's account. \n";
+		}
+
+		delete loan;
+		loanList.erase(it);
+
+		book->setCurrentBookStatus(Books::IN);
+		patron->setNumBooks(patron->getNumBooks() - 1);
+		std::cout << "Book checked in successfully. \n";
+		//-------------------------------------------------------------
+		//Old Section--------------------------------------------------
+       /* loansList.erase(it);
         delete loanPtr; // free the dynamically allocated loan
         book->setCurrentBookStatus(Books::IN);
         patron->setNumBooks(patron->getNumBooks() - 1);
         std::cout << "Book checked in successfully." << std::endl;
-        std::cout << "You still have " << patron->getNumBooks() << " book(s) checked out." << std::endl;
+        std::cout << "You still have " << patron->getNumBooks() << " book(s) checked out." << std::endl;*/
+		//--------------------------------------------------------------
     } else {
         std::cout << "Loan record not found.\n";
     }
